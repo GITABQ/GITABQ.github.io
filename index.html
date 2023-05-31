@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Juego de Aim</title>
+    <style>
+        #game-board {
+            width: 100vw;
+            height: 100vh;
+            background-color: lightgray;
+            position: relative;
+            overflow: hidden;
+            cursor: crosshair;
+        }
+        .target {
+            width: 100px;
+            height: 100px;
+            background-color: red;
+            position: absolute;
+            top: 0;
+            left: 0;
+            border-radius: 50%;
+            transition: all 0.5s ease-out;
+        }
+        #score {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+        }
+        #game-over {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+            display: none;
+        }
+        #game-over-text {
+            font-size: 48px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-board">
+    </div>
+    <p id="score">Puntuación: 0</p>
+    <div id="game-over">
+        <p id="game-over-text"></p>
+    </div>
+
+    <script>
+        var maxTargets = 2;
+        var score = 0;
+        var totalTargets = 0;
+        var totalClicks = 0;
+        var gameBoard = document.getElementById("game-board");
+        var scoreElement = document.getElementById("score");
+        var gameOverElement = document.getElementById("game-over");
+        var gameOverTextElement = document.getElementById("game-over-text");
+        var targets = [];
+
+        gameBoard.addEventListener("click", hitTarget);
+        document.addEventListener("keydown", handleKeyPress);
+
+        function hitTarget(event) {
+            if (event.target.classList.contains("target")) {
+                var target = event.target;
+                target.style.transition = "all 0.1s ease-out";
+                target.style.transform = "scale(0)";
+
+                target.addEventListener("transitionend", function() {
+                    target.remove();
+                    totalTargets--;
+
+                    if (totalTargets === 0) {
+                        showGameOver();
+                    }
+                });
+
+                score++;
+                scoreElement.textContent = "Puntuación: " + score;
+            } else {
+                showGameOver();
+            }
+
+            totalClicks++;
+            createTarget();
+        }
+
+        function createTarget() {
+            if (totalTargets < maxTargets) {
+                var target = document.createElement("div");
+                target.className = "target";
+                target.style.left = getRandomPosition(gameBoard.offsetWidth - 100) + "px";
+                target.style.top = getRandomPosition(gameBoard.offsetHeight - 100) + "px";
+                gameBoard.appendChild(target);
+
+                targets.push(target);
+                totalTargets++;
+            }
+        }
+
+        function getRandomPosition(max) {
+            return Math.floor(Math.random() * (max + 1));
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === "q" || event.key === "Q") {
+                restartGame();
+            }
+        }
+
+        function showGameOver() {
+            gameOverTextElement.textContent = "Game Over\n" +
+                "Puntuación: " + score + "\n" +
+                "Precisión: " + getAccuracy() + "%\n" +
+                "Clics Totales: " + totalClicks;
+
+            gameOverElement.style.display = "flex";
+        }
+
+        function restartGame() {
+            gameOverElement.style.display = "none";
+
+            gameBoard.innerHTML = "";
+            targets = [];
+            score = 0;
+            totalTargets = 0;
+            totalClicks = 0;
+            scoreElement.textContent = "Puntuación: " + score;
+
+            createTarget();
+        }
+
+        function getAccuracy() {
+            if (totalClicks === 0) {
+                return 0;
+            }
+            return ((score / totalClicks) * 100).toFixed(2);
+        }
+
+        createTarget();
+    </script>
+</body>
+</html>
